@@ -21,8 +21,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="index.html">
+      <Filter>public/</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>src/</Filter>
     </ClCompile>
+    <ClCompile Include="thread_pool.cpp">
+      <Filter>src/</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="thread_pool.hpp">
+      <Filter>src/</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
