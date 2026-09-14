@@ -33,12 +33,18 @@
     <ClCompile Include="thread_pool.cpp">
       <Filter>src/</Filter>
     </ClCompile>
+    <ClCompile Include="socket.cpp">
+      <Filter>src/</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="thread_pool.hpp">
       <Filter>src/</Filter>
     </ClInclude>
     <ClInclude Include="wsa_init.hpp">
+      <Filter>src/</Filter>
+    </ClInclude>
+    <ClInclude Include="socket.hpp">
       <Filter>src/</Filter>
     </ClInclude>
   </ItemGroup>

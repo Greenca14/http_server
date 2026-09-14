@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="socket.cpp" />
     <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +150,7 @@
     <None Include="index.html" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="socket.hpp" />
     <ClInclude Include="thread_pool.hpp" />
     <ClInclude Include="wsa_init.hpp" />
   </ItemGroup>
