@@ -38,5 +38,8 @@
     <ClInclude Include="thread_pool.hpp">
       <Filter>src/</Filter>
     </ClInclude>
+    <ClInclude Include="wsa_init.hpp">
+      <Filter>src/</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
