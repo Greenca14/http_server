@@ -3,11 +3,14 @@
 #include <iostream>
 #include <chrono>
 #include <sstream>
+#include <cstring>
+#include <windows.h>
 
 int main() {
 	try {
 		WsaInit wsa;
-		
+		const char* response = "Hello!";
+
 		Socket server(::socket(AF_INET, SOCK_STREAM, 0));
 		if (!server.valid()) {
 			std::cerr << "socket() failed: " << WSAGetLastError() << "\n";
@@ -21,8 +24,18 @@ int main() {
 		server.listen_on();
 		std::cout << "Listening...\n";
 
-		std::cout << "Press to exit (to netstat)\n";
-		std::cin.get();
+		while (true) {
+			std::cout << "Wait client\n";
+			Socket client = server.accept_client();
+			std::cout << "Client connected\n";
+
+			int sent = ::send(client.get(), response, std::strlen(response), 0);
+			if (sent == SOCKET_ERROR) {
+				std::cerr << "send failed: " << WSAGetLastError() << "\n";
+			}
+			::shutdown(client.get(), SD_SEND);
+			Sleep(100);
+		}
 	}
 	catch (const std::exception& e){
 		std::cerr << "Error: " << e.what() << "\n";
