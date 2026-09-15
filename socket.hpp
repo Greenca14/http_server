@@ -23,6 +23,7 @@ public:
 	void bind_to(uint16_t port);
 	void listen_on(int backlog = SOMAXCONN);
 
+	Socket accept_client();
 private:
 	SOCKET sock_;
 };

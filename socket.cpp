@@ -58,3 +58,14 @@ void Socket::listen_on(int backlog) {
 		throw std::runtime_error("listen failed: " + std::to_string(WSAGetLastError()));
 	}
 }
+
+Socket Socket::accept_client() {
+	if (sock_ == INVALID_SOCKET) {
+		throw std::runtime_error("socket failed: " + std::to_string(WSAGetLastError()));
+	}
+	SOCKET client = ::accept(sock_, nullptr, nullptr);
+	if (client == INVALID_SOCKET) {
+		throw std::runtime_error("client failed: " + std::to_string(WSAGetLastError()));
+	}
+	return Socket(client);
+}
