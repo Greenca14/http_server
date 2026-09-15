@@ -9,7 +9,16 @@
 int main() {
 	try {
 		WsaInit wsa;
-		const char* response = "Hello!";
+		
+		std::string body = "Hello!";
+		std::ostringstream resp;
+		resp << "HTTP/1.1 200 OK\r\n"
+			<< "Content-Type: text/plain\r\n"
+			<< "Content-Length: " << body.size() << "\r\n"
+			<< "Connection: close\r\n"
+			<< "\r\n"
+			<< body;
+		std::string response = resp.str();
 
 		Socket server(::socket(AF_INET, SOCK_STREAM, 0));
 		if (!server.valid()) {
@@ -29,7 +38,7 @@ int main() {
 			Socket client = server.accept_client();
 			std::cout << "Client connected\n";
 
-			int sent = ::send(client.get(), response, std::strlen(response), 0);
+			int sent = ::send(client.get(), response.data(), response.size(), 0);
 			if (sent == SOCKET_ERROR) {
 				std::cerr << "send failed: " << WSAGetLastError() << "\n";
 			}
