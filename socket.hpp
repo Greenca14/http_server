@@ -24,6 +24,8 @@ public:
 	void listen_on(int backlog = SOMAXCONN);
 
 	Socket accept_client();
+	
+	void send_all(const std::string& data);
 private:
 	SOCKET sock_;
 };

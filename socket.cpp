@@ -61,11 +61,28 @@ void Socket::listen_on(int backlog) {
 
 Socket Socket::accept_client() {
 	if (sock_ == INVALID_SOCKET) {
-		throw std::runtime_error("socket failed: " + std::to_string(WSAGetLastError()));
+		throw std::runtime_error("socket error: " + std::to_string(WSAGetLastError()));
 	}
 	SOCKET client = ::accept(sock_, nullptr, nullptr);
 	if (client == INVALID_SOCKET) {
 		throw std::runtime_error("client failed: " + std::to_string(WSAGetLastError()));
 	}
 	return Socket(client);
+}
+
+void Socket::send_all(const std::string& data) {
+	size_t sent = 0;
+	size_t total = data.size();
+
+	while (sent < total) {
+		int n = ::send(sock_, data.data() + sent, static_cast<int>(total - sent), 0);
+		if (n == SOCKET_ERROR) {
+			throw std::runtime_error("send failed: " + std::to_string(WSAGetLastError()));
+		}
+		if (n == 0) {
+			throw std::runtime_error("send: connection closed");
+		}
+
+		sent += n;
+	}
 }
