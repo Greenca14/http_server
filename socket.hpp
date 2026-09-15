@@ -1,6 +1,9 @@
 #pragma once
 
 #include <WinSock2.h>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
 class Socket {
 public:
@@ -16,6 +19,9 @@ public:
 
 	SOCKET get() const;
 	bool valid() const;
+
+	void bind_to(uint16_t port);
+	void listen_on(int backlog = SOMAXCONN);
 
 private:
 	SOCKET sock_;
