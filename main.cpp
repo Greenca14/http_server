@@ -8,20 +8,43 @@
 #include <windows.h>
 #include <memory>
 
-static const std::string response = 
-	"HTTP/1.1 200 OK\r\n"
-	"Content-Type: text/plain\r\n"
-	"Content-Length: 13\r\n"
-	"Connection: close\r\n"
-	"\r\n"
-	"Hello!";
+std::string make_response(int status, 
+						const std::string& status_text,
+						const std::string& content_type, 
+						const std::string& body) {
+	std::ostringstream oss;
+	oss << "HTTP/1.1 " << status << " " << status_text << "\r\n"
+		<< "Content-Type: " << content_type << "\r\n"
+		<< "Content-Length: " << body.size() << "\r\n"
+		<< "Connection: close\r\n"
+		<< "\r\n"
+		<< body;
+	
+	return oss.str();
+}
+
+std::string handle_request(const std::string& method, const std::string& path) {
+	std::string clean_path = path;
+	auto qpos = clean_path.find("?");
+	if (qpos != std::string::npos) {
+		clean_path = clean_path.substr(0, qpos);
+	}
+
+	if (clean_path == "/") {
+		return make_response(200, "OK", "text/html", "<h1>Hello!</h1>");
+	}
+	if (clean_path == "/about") {
+		return make_response(200, "OK", "text/html", "<h1>Ohaio!</h1>");
+	}
+	return make_response(404, "Not Found", "text/html", "<h1>404 Not Found</h1>");
+}
 
 int main() {
 	try {
 		WsaInit wsa;
 
 		ThreadPool pool(6);
-		std::cout << "Pool with 4 workers created\n";
+		std::cout << "Pool with 6 workers created\n";
 
 		Socket server(::socket(AF_INET, SOCK_STREAM, 0));
 		if (!server.valid()) {
@@ -50,10 +73,9 @@ int main() {
 					std::string method, path, version;
 					iss >> method >> path >> version;
 
-					std::cout << "Method: " << method
-						<< ", Path: " << path
-						<< ", Version: " << version << "\n";
+					std::cout << method	<< " " << path << " " << version << "\n";
 
+					std::string response = handle_request(method, path);
 					client->send_all(response);
 				}
 				catch (const std::exception& e) {
