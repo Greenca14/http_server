@@ -46,6 +46,14 @@ int main() {
 					std::string request = client->recv_some();
 					std::cout << "---Request\n" << request << "---End\n";
 
+					std::istringstream iss(request);
+					std::string method, path, version;
+					iss >> method >> path >> version;
+
+					std::cout << "Method: " << method
+						<< ", Path: " << path
+						<< ", Version: " << version << "\n";
+
 					client->send_all(response);
 				}
 				catch (const std::exception& e) {
