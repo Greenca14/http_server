@@ -86,3 +86,17 @@ void Socket::send_all(const std::string& data) {
 		sent += n;
 	}
 }
+
+std::string Socket::recv_some() {
+	char buff[4096];
+	int n = ::recv(sock_, buff, sizeof(buff), 0);
+	if (n > 0) {
+		return std::string(buff, n);
+	}
+	else if (n == 0) {
+		return std::string{};
+	}
+	else {
+		throw std::runtime_error("recv failed: " + std::to_string(WSAGetLastError()));
+	}
+}

@@ -43,6 +43,9 @@ int main() {
 
 			pool.enqueue([client = std::make_shared<Socket>(std::move(client))]() mutable {
 				try {
+					std::string request = client->recv_some();
+					std::cout << "---Request\n" << request << "---End\n";
+
 					client->send_all(response);
 				}
 				catch (const std::exception& e) {

@@ -26,6 +26,7 @@ public:
 	Socket accept_client();
 	
 	void send_all(const std::string& data);
+	std::string recv_some();
 private:
 	SOCKET sock_;
 };
