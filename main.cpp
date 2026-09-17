@@ -24,6 +24,18 @@ std::string make_response(int status,
 }
 
 std::string handle_request(const std::string& method, const std::string& path) {
+	if (method.empty()) {
+		return make_response(400, "Bad Request", "text/html", "<h1>400 Bad Request</h1>");
+	}
+
+	if (method != "GET") {
+		return make_response(405, "Method Not Allowed", "text/html", "<h1>405 Method Not Allowed</h1>");
+	}
+
+	if (path.find("..") != std::string::npos) {
+		return make_response(400, "Bad Request", "text/html", "<h1>400 Bad Request</h1>");
+	}
+	
 	std::string clean_path = path;
 	auto qpos = clean_path.find("?");
 	if (qpos != std::string::npos) {
@@ -66,7 +78,7 @@ int main() {
 
 			pool.enqueue([client = std::make_shared<Socket>(std::move(client))]() mutable {
 				try {
-					std::string request = client->recv_some();
+					std::string request = client->recv_request();
 					std::cout << "---Request\n" << request << "---End\n";
 
 					std::istringstream iss(request);

@@ -27,6 +27,7 @@ public:
 	
 	void send_all(const std::string& data);
 	std::string recv_some();
+	std::string recv_request();
 private:
 	SOCKET sock_;
 };

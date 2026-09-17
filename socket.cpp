@@ -100,3 +100,23 @@ std::string Socket::recv_some() {
 		throw std::runtime_error("recv failed: " + std::to_string(WSAGetLastError()));
 	}
 }
+
+std::string Socket::recv_request() {
+	std::string accumulated;
+
+	while (true) {
+		std::string chunk = recv_some();
+
+		if (chunk.empty()) {
+			break;
+		}
+
+		accumulated += chunk;
+
+		if (accumulated.find("\r\n\r\n") != std::string::npos) {
+			break;
+		}
+	}
+
+	return accumulated;
+}
