@@ -9,6 +9,9 @@
 #include <memory>
 #include <optional>
 #include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 std::string make_response(int status, 
 						const std::string& status_text,
@@ -61,6 +64,35 @@ std::optional<std::string> read_file(const std::string& path) {
 	oss << file.rdbuf();
 	return oss.str();
 }
+
+std::optional<fs::path> safe_path(const fs::path& root, const std::string& url_path) {
+	std::string relative = url_path;
+	if (!relative.empty() && (relative[0] == '/' || relative[0] == '\\')) {
+		relative = relative.substr(1);
+	}
+
+	fs::path full = root / relative;
+
+	fs::path canon_full, canon_root;
+	try {
+		canon_full = fs::weakly_canonical(full);
+		canon_root = fs::weakly_canonical(root);
+	}
+	catch (const fs::filesystem_error&) {
+		return std::nullopt;
+	}
+
+	if (canon_full == canon_root) {
+		return std::nullopt;
+	}
+
+	fs::path rel = canon_full.lexically_relative(canon_root);
+	if (rel.empty() || rel.string().rfind("..", 0) == 0) {
+		return std::nullopt;
+	}
+
+	return canon_full;
+}	
 
 std::string handle_request(const std::string& method, const std::string& path) {
 	if (method.empty()) {
