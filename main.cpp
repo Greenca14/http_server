@@ -11,12 +11,19 @@
 #include <fstream>
 #include <filesystem>
 #include <unordered_map>
+#include <ctime>
 
 namespace fs = std::filesystem;
 
 static fs::path g_root = "public";
+std::mutex g_log_mutex;
 
-std::string make_response(int status, 
+struct Response {
+	int status;
+	std::string content;
+};
+
+std::string build_response(int status, 
 						const std::string& status_text,
 						const std::string& content_type, 
 						const std::string& body) {
@@ -29,6 +36,16 @@ std::string make_response(int status,
 		<< body;
 	
 	return oss.str();
+}
+
+Response make_response(int status,
+						const std::string& status_text,
+						const std::string& content_type,
+						const std::string& body) {
+	return Response{
+		status,
+		build_response(status, status_text, content_type, body)
+	};
 }
 
 std::string mime_type(const std::string& path) {
@@ -98,7 +115,7 @@ std::optional<fs::path> safe_path(const fs::path& root, const std::string& url_p
 	return canon_full;
 }	
 
-std::string handle_request(const std::string& method, const std::string& path, const fs::path& root) {
+Response handle_request(const std::string& method, const std::string& path, const fs::path& root) {
 	if (method.empty()) {
 		return make_response(400, "Bad Request", "text/html", "<h1>400 Bad Request</h1>");
 	}
@@ -136,45 +153,53 @@ std::string handle_request(const std::string& method, const std::string& path, c
 	return make_response(200, "OK", mime, *content);
 }
 
+std::string current_time_string() {
+	std::time_t now = std::time(nullptr);
+	std::tm tm_buf;
+	if (localtime_s(&tm_buf, &now) != 0) {
+		return "???";
+	}
+	char buf[32];
+	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm_buf);
+	return std::string(buf);
+}
+
+void log_request(const std::string& method, const std::string& path, int status, size_t size) {
+	std::lock_guard<std::mutex> lock(g_log_mutex);
+	std::cout << "[" << current_time_string() << "]" << method << " " << path << " -> " << status << " (" << size << " bytes)\n";
+}
+
 int main(int argc, char** argv) {
 	if (argc > 1) g_root = argv[1];
 	try {
 		WsaInit wsa;
-
 		ThreadPool pool(6);
-		std::cout << "Pool with 6 workers created\n";
-
 		Socket server(::socket(AF_INET, SOCK_STREAM, 0));
+
 		if (!server.valid()) {
 			std::cerr << "socket() failed: " << WSAGetLastError() << "\n";
 			return 1;
 		}
-		std::cout << "Socket created\n";
 
 		server.bind_to(8080);
-		std::cout << "Set reuseaddr and bound to 8080\n";
-
 		server.listen_on();
-		std::cout << "Listening...\n";
+		std::cout << "Listening on http://localhost:8080\n";
 
 		while (true) {
-			std::cout << "Wait client\n";
 			Socket client = server.accept_client();
-			std::cout << "Client connected\n";
 
 			pool.enqueue([client = std::make_shared<Socket>(std::move(client))]() mutable {
 				try {
 					std::string request = client->recv_request();
-					std::cout << "---Request\n" << request << "---End\n";
 
 					std::istringstream iss(request);
 					std::string method, path, version;
 					iss >> method >> path >> version;
 
-					std::cout << method	<< " " << path << " " << version << "\n";
 
-					std::string response = handle_request(method, path, g_root);
-					client->send_all(response);
+					Response response = handle_request(method, path, g_root);
+					client->send_all(response.content);
+					log_request(method, path, response.status, response.content.size());
 				}
 				catch (const std::exception& e) {
 					std::cerr << "send failed: " << e.what() << "\n";
