@@ -23,6 +23,35 @@ std::string make_response(int status,
 	return oss.str();
 }
 
+std::string mime_type(const std::string& path) {
+	static const std::unordered_map<std::string, std::string> types = {
+		{".html", "text/html"},
+		{".htm", "text/html"},
+		{".css", "text/css"},
+		{".js", "application/javascript"},
+		{".json", "application/json"},
+		{".txt", "text/plain"},
+		{".png",  "image/png"},
+		{".jpg",  "image/jpeg"},
+		{".jpeg", "image/jpeg"},
+		{".gif",  "image/gif"},
+		{".svg",  "image/svg+xml"},
+		{".ico",  "image/x-icon"},
+		{".pdf",  "application/pdf"},
+	};
+
+	auto dot = path.rfind(".");
+	if (dot == std::string::npos) return "application/octet-stream";
+
+	std::string ext = path.substr(dot);
+
+	auto it = types.find(ext);
+	if (it != types.end()) return it->second;
+
+	return "application/octet-stream";
+}
+
+
 std::string handle_request(const std::string& method, const std::string& path) {
 	if (method.empty()) {
 		return make_response(400, "Bad Request", "text/html", "<h1>400 Bad Request</h1>");
