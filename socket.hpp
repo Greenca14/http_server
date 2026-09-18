@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <atomic>
 
 class Socket {
 public:
@@ -28,6 +29,9 @@ public:
 	void send_all(const std::string& data);
 	std::string recv_some();
 	std::string recv_request();
+	void handle_signal(int);
+	bool wait_readable(int timeout_ms) const;
 private:
 	SOCKET sock_;
+	void worker_loop();
 };

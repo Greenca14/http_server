@@ -120,3 +120,16 @@ std::string Socket::recv_request() {
 
 	return accumulated;
 }
+
+bool Socket::wait_readable(int timeout_ms) const {
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(sock_, &readfds);
+
+	timeval tv;
+	tv.tv_sec = timeout_ms / 1000;
+	tv.tv_usec = (timeout_ms % 1000) * 1000;
+
+	int result = ::select(0, &readfds, nullptr, nullptr, &tv);
+	return result > 0;
+}

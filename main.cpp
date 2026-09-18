@@ -12,11 +12,18 @@
 #include <filesystem>
 #include <unordered_map>
 #include <ctime>
-
+#include <atomic>
+#include <csignal>
+ 
 namespace fs = std::filesystem;
 
 static fs::path g_root = "public";
 std::mutex g_log_mutex;
+std::atomic<bool> g_shutdown{false};
+
+void handle_signal(int) {
+	g_shutdown = true;
+}
 
 struct Response {
 	int status;
@@ -171,6 +178,7 @@ void log_request(const std::string& method, const std::string& path, int status,
 
 int main(int argc, char** argv) {
 	if (argc > 1) g_root = argv[1];
+	std::signal(SIGINT, handle_signal);
 	try {
 		WsaInit wsa;
 		ThreadPool pool(6);
@@ -185,7 +193,11 @@ int main(int argc, char** argv) {
 		server.listen_on();
 		std::cout << "Listening on http://localhost:8080\n";
 
-		while (true) {
+		while (!g_shutdown) {
+			if (!server.wait_readable(200)) {
+				continue;
+			}
+
 			Socket client = server.accept_client();
 
 			pool.enqueue([client = std::make_shared<Socket>(std::move(client))]() mutable {
@@ -208,6 +220,7 @@ int main(int argc, char** argv) {
 				Sleep(100);
 			});
 		}
+		std::cout << "\nShutdown signal received. Closing...\n";
 	}
 	catch (const std::exception& e){
 		std::cerr << "Error: " << e.what() << "\n";

@@ -7,3 +7,5 @@ x64/
 ^.sln.docstates
 out/
 build/
+CMakeCache.txt
+CMakeFiles/
