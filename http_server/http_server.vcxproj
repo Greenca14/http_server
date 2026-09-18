@@ -156,6 +156,9 @@
     <ClInclude Include="thread_pool.hpp" />
     <ClInclude Include="wsa_init.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

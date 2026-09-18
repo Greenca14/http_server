@@ -1,0 +1,11 @@
+.vs/
+*.user
+*.suo
+*.sln.docstates
+Debug/
+Release/
+x64/
+build/
+out/
+CMakeCache.txt
+CMakeFiles/
