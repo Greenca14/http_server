@@ -147,7 +147,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="about.html" />
     <None Include="index.html" />
+    <None Include="style.css" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="socket.hpp" />

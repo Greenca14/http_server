@@ -10,8 +10,11 @@
 #include <optional>
 #include <fstream>
 #include <filesystem>
+#include <unordered_map>
 
 namespace fs = std::filesystem;
+
+static fs::path g_root = "public";
 
 std::string make_response(int status, 
 						const std::string& status_text,
@@ -87,24 +90,21 @@ std::optional<fs::path> safe_path(const fs::path& root, const std::string& url_p
 	}
 
 	fs::path rel = canon_full.lexically_relative(canon_root);
-	if (rel.empty() || rel.string().rfind("..", 0) == 0) {
+	auto first = rel.begin();
+	if (first != rel.end() && *first == "..") {
 		return std::nullopt;
 	}
 
 	return canon_full;
 }	
 
-std::string handle_request(const std::string& method, const std::string& path) {
+std::string handle_request(const std::string& method, const std::string& path, const fs::path& root) {
 	if (method.empty()) {
 		return make_response(400, "Bad Request", "text/html", "<h1>400 Bad Request</h1>");
 	}
 
 	if (method != "GET") {
 		return make_response(405, "Method Not Allowed", "text/html", "<h1>405 Method Not Allowed</h1>");
-	}
-
-	if (path.find("..") != std::string::npos) {
-		return make_response(400, "Bad Request", "text/html", "<h1>400 Bad Request</h1>");
 	}
 	
 	std::string clean_path = path;
@@ -114,15 +114,30 @@ std::string handle_request(const std::string& method, const std::string& path) {
 	}
 
 	if (clean_path == "/") {
-		return make_response(200, "OK", "text/html", "<h1>Hello!</h1>");
+		clean_path = "/index.html";
 	}
-	if (clean_path == "/about") {
-		return make_response(200, "OK", "text/html", "<h1>Ohaio!</h1>");
+
+	auto safe = safe_path(root, clean_path);
+	if (!safe) {
+		return make_response(400, "Bad Request", "text/html", "<h1>400 Bad Request</h1>");
 	}
-	return make_response(404, "Not Found", "text/html", "<h1>404 Not Found</h1>");
+
+	if (!fs::exists(*safe) || !fs::is_regular_file(*safe)) {
+		return make_response(404, "Not Found", "text/html", "<h1>404 Not Found</h1>");
+	}
+
+	auto content = read_file(safe->string());
+	if (!content) {
+		return make_response(500, "Internal Server Error", "text/html", "<h1>500 Internal Server Error</h1>");
+	}
+
+	std::string mime = mime_type(safe->string());
+
+	return make_response(200, "OK", mime, *content);
 }
 
-int main() {
+int main(int argc, char** argv) {
+	if (argc > 1) g_root = argv[1];
 	try {
 		WsaInit wsa;
 
@@ -158,7 +173,7 @@ int main() {
 
 					std::cout << method	<< " " << path << " " << version << "\n";
 
-					std::string response = handle_request(method, path);
+					std::string response = handle_request(method, path, g_root);
 					client->send_all(response);
 				}
 				catch (const std::exception& e) {
