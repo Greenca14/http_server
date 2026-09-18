@@ -7,6 +7,8 @@
 #include <cstring>
 #include <windows.h>
 #include <memory>
+#include <optional>
+#include <fstream>
 
 std::string make_response(int status, 
 						const std::string& status_text,
@@ -51,6 +53,14 @@ std::string mime_type(const std::string& path) {
 	return "application/octet-stream";
 }
 
+std::optional<std::string> read_file(const std::string& path) {
+	std::ifstream file(path, std::ios::binary);
+	if (!file) return std::nullopt;
+
+	std::ostringstream oss;
+	oss << file.rdbuf();
+	return oss.str();
+}
 
 std::string handle_request(const std::string& method, const std::string& path) {
 	if (method.empty()) {
